@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#00FF80" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Corpo do carro -->
+  <path d="M2 12h20l-2-6H4l-2 6z"/>
+  <path d="M2 12v6h20v-6"/>
+  <!-- Linha divisória das portas -->
+  <path d="M12 12v6"/>
+  <!-- Janelas -->
+  <path d="M4 7h5v4H4z"/>
+  <path d="M15 7h5v4h-5z"/>
+  <!-- Maçaneta -->
+  <rect x="9" y="10" width="1.5" height="0.8" fill="#00FF80"/>
+  <!-- Rodas -->
+  <circle cx="7" cy="19" r="2.5" fill="none"/>
+  <circle cx="17" cy="19" r="2.5" fill="none"/>
+</svg>

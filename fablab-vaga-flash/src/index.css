@@ -1,0 +1,133 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* FabLab Parking Control - Design System */
+    /* Display Digital Moderno com Alto Contraste */
+    
+    --background: 0 0% 4%;
+    --foreground: 0 0% 100%;
+
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 4%;
+
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 60%;
+
+    --accent: 145 100% 50%;
+    --accent-foreground: 0 0% 4%;
+
+    --destructive: 0 100% 61%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 145 100% 50%;
+
+    --radius: 0.5rem;
+    
+    /* Cores personalizadas para o display */
+    --available: 145 100% 50%;
+    --available-glow: 145 100% 70%;
+    --full: 0 100% 61%;
+    --full-glow: 0 100% 75%;
+    --status-online: 145 100% 50%;
+    --status-offline: 0 0% 40%;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    /* Modo dark já é o padrão para este projeto */
+    --background: 0 0% 4%;
+    --foreground: 0 0% 100%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-mono;
+    font-family: 'Roboto Mono', monospace;
+  }
+}
+
+/* Animações personalizadas para o display */
+@keyframes blink {
+  0%, 49% {
+    opacity: 1;
+  }
+  50%, 100% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px hsl(var(--available))) drop-shadow(0 0 16px hsl(var(--available-glow)));
+  }
+  50% {
+    filter: drop-shadow(0 0 12px hsl(var(--available))) drop-shadow(0 0 24px hsl(var(--available-glow)));
+  }
+}
+
+@keyframes pulse-glow-red {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px hsl(var(--full))) drop-shadow(0 0 16px hsl(var(--full-glow)));
+  }
+  50% {
+    filter: drop-shadow(0 0 12px hsl(var(--full))) drop-shadow(0 0 24px hsl(var(--full-glow)));
+  }
+}
+
+.animate-blink {
+  animation: blink 1.5s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-pulse-glow-red {
+  animation: pulse-glow-red 2s ease-in-out infinite;
+}
