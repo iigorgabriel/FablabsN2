@@ -43,6 +43,8 @@ const AdminDashboard = () => {
     valorFaturado: number;
     arquivos: string;
   } | null>(null);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   const PRICE_PER_ENTRY = 45; // R$ 45,00 por entrada (4 carros = R$ 180,00)
 
@@ -588,56 +590,60 @@ const AdminDashboard = () => {
     try {
       console.log("📊 Iniciando exportação do relatório...");
       
-      // Usar dados já carregados (todayEntries, todayRevenue) ou buscar se necessário
-      let entriesToExport = recentEntries;
+      // Sempre tentar usar dados disponíveis (prioridade: todayRevenue > vagas ocupadas > buscar do banco)
+      let entriesToExport: CarEntry[] = [];
       let revenueToExport = todayRevenue;
       let entriesCount = todayEntries;
       
-      // Se não há dados carregados, tentar buscar do banco
-      if (entriesToExport.length === 0 || revenueToExport === 0) {
-        const { data: allEntries, error } = await supabase
-          .from("car_entries")
-          .select("*")
-          .order("created_at", { ascending: false });
-
-        if (error) {
-          console.error("❌ Erro ao buscar entradas:", error);
-          // Se der erro mas temos dados de vagas ocupadas, usar isso
-          const vagasOcupadas = totalVagas - vagasDisponiveis;
-          if (vagasOcupadas > 0) {
-            entriesCount = vagasOcupadas;
-            revenueToExport = vagasOcupadas * PRICE_PER_ENTRY;
-            entriesToExport = [];
-            console.log("⚠️ Usando dados de vagas ocupadas para exportação");
-          } else {
-            alert("Nenhum dado disponível para exportar.");
-            return;
-          }
-        } else {
-          entriesToExport = allEntries || [];
-          const now = new Date();
-          const todayString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-          const filtered = entriesToExport.filter((entry) => {
-            const entryDate = new Date(entry.created_at);
-            const entryDateString = `${entryDate.getFullYear()}-${String(entryDate.getMonth() + 1).padStart(2, '0')}-${String(entryDate.getDate()).padStart(2, '0')}`;
-            return entryDateString === todayString;
-          });
-          entriesToExport = filtered;
-          entriesCount = filtered.length;
-          revenueToExport = filtered.reduce((sum, entry) => sum + (entry.valor || PRICE_PER_ENTRY), 0);
-        }
-      }
-
-      // Se ainda não há dados, usar vagas ocupadas
-      if (entriesCount === 0 && revenueToExport === 0) {
+      // Se temos receita de hoje, usar ela
+      if (revenueToExport > 0 && entriesCount > 0) {
+        // Usar dados já carregados
+        const today = new Date();
+        const todayString = today.toLocaleDateString("en-CA");
+        entriesToExport = recentEntries.filter((entry) => {
+          const entryDate = new Date(entry.created_at);
+          return entryDate.toLocaleDateString("en-CA") === todayString;
+        });
+      } else {
+        // Tentar usar vagas ocupadas primeiro (mais rápido e confiável)
         const vagasOcupadas = totalVagas - vagasDisponiveis;
         if (vagasOcupadas > 0) {
           entriesCount = vagasOcupadas;
           revenueToExport = vagasOcupadas * PRICE_PER_ENTRY;
+          entriesToExport = [];
+          console.log("⚠️ Usando dados de vagas ocupadas para exportação");
         } else {
-          alert("Nenhum carro registrado hoje para exportar.");
-          return;
+          // Se não há vagas ocupadas, tentar buscar do banco
+          const { data: allEntries, error } = await supabase
+            .from("car_entries")
+            .select("*")
+            .order("created_at", { ascending: false });
+
+          if (error) {
+            console.error("❌ Erro ao buscar entradas:", error);
+            setErrorMessage("Erro ao buscar dados do banco. Verifique sua conexão.");
+            setShowErrorModal(true);
+            return;
+          } else {
+            entriesToExport = allEntries || [];
+            const now = new Date();
+            const todayString = now.toLocaleDateString("en-CA");
+            const filtered = entriesToExport.filter((entry) => {
+              const entryDate = new Date(entry.created_at);
+              return entryDate.toLocaleDateString("en-CA") === todayString;
+            });
+            entriesToExport = filtered;
+            entriesCount = filtered.length;
+            revenueToExport = filtered.reduce((sum, entry) => sum + (entry.valor || PRICE_PER_ENTRY), 0);
+          }
         }
+      }
+
+      // Se ainda não há dados, mostrar erro
+      if (entriesCount === 0 && revenueToExport === 0) {
+        setErrorMessage("Nenhum dado disponível para exportar. Não há carros registrados hoje.");
+        setShowErrorModal(true);
+        return;
       }
 
       // Calcular data de hoje
@@ -1194,6 +1200,28 @@ Relatório gerado automaticamente pelo sistema.
           )}
           <DialogFooter>
             <Button onClick={() => setShowExportModal(false)} className="w-full">
+              OK
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Erro */}
+      <Dialog open={showErrorModal} onOpenChange={setShowErrorModal}>
+        <DialogContent>
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 rounded-full bg-red-500/10 flex items-center justify-center">
+                <span className="text-xl">⚠️</span>
+              </div>
+              <DialogTitle className="text-xl">Erro ao Exportar</DialogTitle>
+            </div>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-muted-foreground">{errorMessage}</p>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setShowErrorModal(false)} className="w-full">
               OK
             </Button>
           </DialogFooter>
