@@ -1,8 +1,7 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "devCommand": "npm run dev",
-  "installCommand": "npm install",
+  "buildCommand": "cd fablab-vaga-flash && npm ci && npm run build",
+  "outputDirectory": "fablab-vaga-flash/dist",
+  "installCommand": "cd fablab-vaga-flash && npm ci",
   "framework": "vite"
 }
 

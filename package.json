@@ -1,12 +1,6 @@
 {
   "name": "dash-projeto",
   "version": "1.0.0",
-  "private": true,
-  "description": "Parking control system with admin panel",
-  "scripts": {
-    "dev": "cd fablab-vaga-flash && npm run dev",
-    "build": "cd fablab-vaga-flash && npm install && npm run build",
-    "preview": "cd fablab-vaga-flash && npm run preview"
-  }
+  "private": true
 }
 
