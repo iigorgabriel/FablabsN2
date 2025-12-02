@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { LogOut, DollarSign, TrendingUp, Calendar, Download, CheckCircle2 } from "lucide-react";
+import { LogOut, DollarSign, TrendingUp, Calendar, Download, CheckCircle2, RotateCcw } from "lucide-react";
 import CompactVagasDisplay from "./CompactVagasDisplay";
 
 interface CarEntry {
@@ -45,6 +45,8 @@ const AdminDashboard = () => {
   } | null>(null);
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   const PRICE_PER_ENTRY = 45; // R$ 45,00 por entrada (4 carros = R$ 180,00)
 
@@ -126,6 +128,46 @@ const AdminDashboard = () => {
     } catch (error) {
       console.error("Erro:", error);
       alert("Erro ao registrar entrada!");
+    }
+  };
+
+  // Função para resetar vagas do estacionamento
+  const resetParkingSpots = async () => {
+    setIsResetting(true);
+    try {
+      // Inserir novo registro com todas as vagas disponíveis
+      const { error } = await supabase
+        .from("parking_control")
+        .insert([
+          {
+            vagas_disponiveis: totalVagas, // Resetar para o total (4 vagas)
+          },
+        ]);
+
+      if (error) {
+        console.error("❌ Erro ao resetar vagas:", error);
+        setErrorMessage("Erro ao resetar vagas. Verifique sua conexão.");
+        setShowErrorModal(true);
+        setIsResetting(false);
+        return;
+      }
+
+      console.log("✅ Vagas resetadas com sucesso!");
+      
+      // Atualizar estado local imediatamente
+      setVagasDisponiveis(totalVagas);
+      
+      // Recarregar dados do banco
+      await fetchParkingData();
+      
+      // Fechar modal de confirmação
+      setShowResetModal(false);
+    } catch (error) {
+      console.error("Erro ao resetar vagas:", error);
+      setErrorMessage("Erro inesperado ao resetar vagas.");
+      setShowErrorModal(true);
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -973,10 +1015,23 @@ Relatório gerado automaticamente pelo sistema.
             {/* Painel de Controle de Vagas */}
             <Card>
               <CardHeader>
-                <CardTitle>Controle de Vagas em Tempo Real</CardTitle>
-                <CardDescription>
-                  Monitoramento das vagas disponíveis e ocupadas
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Controle de Vagas em Tempo Real</CardTitle>
+                    <CardDescription>
+                      Monitoramento das vagas disponíveis e ocupadas
+                    </CardDescription>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowResetModal(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    Resetar Vagas
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -1223,6 +1278,62 @@ Relatório gerado automaticamente pelo sistema.
           <DialogFooter>
             <Button onClick={() => setShowErrorModal(false)} className="w-full">
               OK
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Confirmação de Reset */}
+      <Dialog open={showResetModal} onOpenChange={setShowResetModal}>
+        <DialogContent>
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 rounded-full bg-orange-500/10 flex items-center justify-center">
+                <RotateCcw className="h-5 w-5 text-orange-600" />
+              </div>
+              <DialogTitle className="text-xl">Resetar Vagas do Estacionamento</DialogTitle>
+            </div>
+          </DialogHeader>
+          <DialogDescription className="py-4">
+            <p className="text-muted-foreground mb-2">
+              Tem certeza que deseja resetar todas as vagas do estacionamento?
+            </p>
+            <div className="bg-muted/50 p-3 rounded-md space-y-1">
+              <p className="text-sm">
+                <strong>Vagas Ocupadas:</strong> {totalVagas - vagasDisponiveis} / {totalVagas}
+              </p>
+              <p className="text-sm">
+                <strong>Vagas Disponíveis:</strong> {vagasDisponiveis} / {totalVagas}
+              </p>
+              <p className="text-sm text-orange-600 font-medium mt-2">
+                Após o reset, todas as {totalVagas} vagas estarão disponíveis novamente.
+              </p>
+            </div>
+          </DialogDescription>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowResetModal(false)}
+              disabled={isResetting}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={resetParkingSpots}
+              disabled={isResetting}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              {isResetting ? (
+                <>
+                  <RotateCcw className="h-4 w-4 mr-2 animate-spin" />
+                  Resetando...
+                </>
+              ) : (
+                <>
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  Confirmar Reset
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
